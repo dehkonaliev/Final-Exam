@@ -1,3 +1,51 @@
 from django.db import models
+from django.contrib.auth.models import User
 
-# Create your models here.
+
+class AccountBase(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    
+    def __str__(self):
+        return self.name
+    
+class Account(models.Model):
+    class CurrencyTypes(models.TextChoices):
+        USD = "USD", 'usd'
+        SUM = "SUM", 'sum'
+        RUBL = "RUBL", 'rubl'
+        EURO = "EURO", 'euro'
+        
+    account_type = models.ForeignKey(AccountBase, on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accounts")
+    currency = models.CharField(max_length=20, choices=CurrencyTypes.choices, default=CurrencyTypes.SUM)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.account_type}"
+    
+    class Meta:
+        unique_together = [
+            'user', 'account_type'
+        ]
+    
+class TransactionTypeBase(models.Model):
+    class TransactionTypes(models.TextChoices):
+        INCOME = "INCOME", 'income'
+        OUTCOME = "OUTCOME", 'outcome'
+    name = models.CharField(max_length=50, unique=True)
+    type = models.CharField(max_length=20, choices=TransactionTypes.choices)
+    
+    def __str__(self):
+        return self.name
+    
+class TransactionTypePrivate(models.Model):
+    transaction_type = models.ForeignKey(TransactionTypeBase, on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="transactions")
+    
+class Transaction(models.Model):
+    amount = models.DecimalField(decimal_places=2, max_digits=30)
+    transaction_type = models.ForeignKey(TransactionTypeBase, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='transactions')
+    
+    
+    
