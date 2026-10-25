@@ -1,4 +1,4 @@
-<h1 style="color: Green">Kirim chiqim ilovasi</h1>
+<h1 style="color: green">Kirim chiqim ilovasi</h1>
 
 # Umumiy loyiha haqida
     - Loyiha 3 tilda (O'zbek, Ingliz va Rus)
