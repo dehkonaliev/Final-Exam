@@ -1,4 +1,4 @@
-Kirim chiqim ilovasi
+<h1>Kirim chiqim ilovasi</h1>
 
 # Umumiy loyiha haqida
     - Loyiha 3 tilda (O'zbek, Ingliz va Rus)
