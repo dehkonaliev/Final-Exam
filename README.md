@@ -44,3 +44,28 @@
 
 # Hisobotlar
     - Kirim va chiqim ma'lumotlaridan foydalangan xolda oylik haftalik va kunlik hisobotlar statistika ko'rinishida qaytariladi
+
+== Modellar ==
+# Account turlari
+    - name (unique=True)
+
+# Shaxsiy accountlar
+    - account_type (FK)
+    - currency
+
+# Operatsiya turlari
+    - name (unique=True)
+    - type (income, expence)
+
+# Shaxsiy Operatsiya turlari
+    - user (FK)
+    - transaction_type (chiqim turlari, FK)
+
+# Operatsiyalar
+    - amount
+    - transaction_type FK
+    - created_at
+    - account
+    - account (FK, shaxsiy account)
+
+
