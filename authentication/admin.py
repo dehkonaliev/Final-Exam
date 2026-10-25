@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import TempUser, MyToken
 
-# Register your models here.
+admin.site.register(TempUser)
+admin.site.register(MyToken)
