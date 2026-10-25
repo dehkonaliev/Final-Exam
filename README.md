@@ -1,4 +1,4 @@
-<h1 style="color: green">Kirim chiqim ilovasi</h1>
+<h1>Kirim chiqim ilovasi</h1>
 
 # Umumiy loyiha haqida
     - Loyiha 3 tilda (O'zbek, Ingliz va Rus)
@@ -35,7 +35,12 @@
         - hisob
         - kirim turi
     3. Kirim va chiqimlar bitta modelda yaratiladi
+    4. Kartadagi pulni naqt qilish yoki naqt pulni kartaga o'tkazish biri uchun chiqim va biri uchun kirim sifatida hisoblanadi
+
+# Valyuta birligi
+    - Foydalanuvchi o'zi xohlagan valyuta birligini istalgan hisobiga kiritib qo'yishi mumkin.
+    - Transaksiyalar va hisobdagi pullarni ishlatish jarayonini to'g'ri amalga oshirish uchun, Jahon bankidan API olib foydalanailadi.
+    - Bir muammo: Agar foydalanuvchi so'mdagi mablag'larini dollada ko'rishga o'tkazgan bo'lsa, valyutalar kursi o'zgarganda bu mablag'lar boshqacha miqdorda ko'rinadi. 
 
 # Hisobotlar
     - Kirim va chiqim ma'lumotlaridan foydalangan xolda oylik haftalik va kunlik hisobotlar statistika ko'rinishida qaytariladi
-    
