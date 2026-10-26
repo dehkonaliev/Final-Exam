@@ -31,11 +31,14 @@ class TransactionTypeBase(models.Model):
     class TransactionTypes(models.TextChoices):
         INCOME = "INCOME", 'income'
         OUTCOME = "OUTCOME", 'outcome'
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
     type = models.CharField(max_length=20, choices=TransactionTypes.choices)
     
     def __str__(self):
         return self.name
+    
+    class Meta:
+        unique_together = ['name', 'type']
     
 class TransactionTypePrivate(models.Model):
     transaction_type = models.ForeignKey(TransactionTypeBase, on_delete=models.PROTECT)
