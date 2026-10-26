@@ -15,7 +15,7 @@ class Account(models.Model):
         RUBL = "RUBL", 'rubl'
         EURO = "EURO", 'euro'
         
-    account_type = models.ForeignKey(AccountBase, on_delete=models.PROTECT)
+    account_type = models.ForeignKey(AccountBase, null=True, blank=True, on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accounts")
     currency = models.CharField(max_length=20, choices=CurrencyTypes.choices, default=CurrencyTypes.SUM)
     
@@ -46,6 +46,4 @@ class Transaction(models.Model):
     transaction_type = models.ForeignKey(TransactionTypeBase, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='transactions')
-    
-    
     

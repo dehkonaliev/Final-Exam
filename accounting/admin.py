@@ -1,3 +1,8 @@
 from django.contrib import admin
+from .models import Account, AccountBase, Transaction, TransactionTypeBase, TransactionTypePrivate
 
-# Register your models here.
+admin.site.register(Account)
+admin.site.register(AccountBase)
+admin.site.register(Transaction)
+admin.site.register(TransactionTypePrivate)
+admin.site.register(TransactionTypeBase)
