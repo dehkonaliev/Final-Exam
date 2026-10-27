@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import ListCreateTransactionAPIView
+from .views import ListCreateTransactionAPIView, transfertome_api_view
 
 urlpatterns = [
     path('transaction', ListCreateTransactionAPIView.as_view()),
+    path('tranfer', transfertome_api_view),
 ]
