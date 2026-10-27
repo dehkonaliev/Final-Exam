@@ -3,6 +3,8 @@ from rest_framework import serializers
 from authentication.utils import field_error
 from accounting.models import TransactionTypeBase
 from django.db import transaction
+from django.db.models import F
+from accounting.models import Account
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -47,6 +49,9 @@ class TransferToMeSerializer(serializers.ModelSerializer):
         if not user.accounts.filter(pk=recipient).exists():
             return field_error("recipient", "Recipient account not found")
         
+        if account.id == recipient:
+            return field_error("account", "Account and recipient cannot be the same")
+        
         if account.balance < amount:
             return field_error("account", "Insufficient funds")
         
@@ -59,8 +64,17 @@ class TransferToMeSerializer(serializers.ModelSerializer):
         user = self.context.get('user')
         
         with transaction.atomic():
+            sender_account = Account.objects.select_for_update().get(id=account.id)
+            recipient_account = Account.objects.select_for_update().get(id=recipient)
+            
             transfer_to = Transaction.objects.create(amount=amount, account_id=recipient, transaction_type_id=6)
             transfer_from = Transaction.objects.create(amount=amount, account=account, transaction_type_id=5)
+            
+            sender_account.balance = F('balance') - amount
+            sender_account.save()
+            
+            recipient_account.balance = F('balance') + amount
+            recipient_account.save()
         
         return {
             'transfer_to': transfer_to,
