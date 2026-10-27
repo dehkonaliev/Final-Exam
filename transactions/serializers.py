@@ -13,7 +13,6 @@ class TransactionSerializer(serializers.ModelSerializer):
         fields = ['id', 'amount', 'transaction_type', 'created_at', 'account']
         read_only_fields = ['id', 'created_at']
         
-        
     def validate(self, attrs):
         amount = attrs['amount']
         account = attrs['account']
@@ -24,10 +23,39 @@ class TransactionSerializer(serializers.ModelSerializer):
         if not user.accounts.filter(pk=account.id).exists():
             return field_error("account", "Account not found")
         
-        if transaction_type == TransactionTypeBase.TransactionTypes.OUTCOME and account.balance < amount:
+        if transaction_type.type == TransactionTypeBase.TransactionTypes.OUTCOME and account.balance < amount:
             return field_error("account", "Insufficient funds")
         
         return attrs
+    
+    def create(self, validated_data):
+        transaction_type = validated_data.get('transaction_type')
+        account = validated_data.get('account')
+        amount = validated_data.get('amount')
+        
+        with transaction.atomic():
+            account_obj = Account.objects.select_for_update().get(id=account.id)
+            
+            if transaction_type.type == TransactionTypeBase.TransactionTypes.OUTCOME:
+                account_obj.balance = F('balance') - amount
+            if transaction_type.type == TransactionTypeBase.TransactionTypes.INCOME:
+                account_obj.balance = F('balance') + amount
+            account_obj.save()
+            
+            return Transaction.objects.create(transaction_type=transaction_type, account=account, amount=amount)
+        
+    def to_representation(self, instance):
+        balance = instance.account.balance
+        representation = super().to_representation(instance)
+        if instance.transaction_type:
+            representation['transaction_type'] = {
+                "name": instance.transaction_type.name,
+                "type": instance.transaction_type.type         
+            }
+            representation['balance'] = balance
+        return representation
+            
+        
     
         
 class TransferToMeSerializer(serializers.ModelSerializer):
@@ -61,7 +89,6 @@ class TransferToMeSerializer(serializers.ModelSerializer):
         amount = validated_data['amount']
         recipient = validated_data['recipient']
         account = validated_data['account']
-        user = self.context.get('user')
         
         with transaction.atomic():
             sender_account = Account.objects.select_for_update().get(id=account.id)
