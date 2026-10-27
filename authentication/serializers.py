@@ -142,3 +142,48 @@ class LogoutSerializer(serializers.Serializer):
         except Exception:
             return field_error("refresh", "Token is invalid or already blacklisted.")
         return value
+    
+class UserUpdateSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'first_name', 'last_name', 'username'
+        ]
+
+    def validate_first_name(self, first_name):
+        if first_name and first_name.strip():
+            return name_validator(first_name, "first_name")
+        return first_name
+
+    def validate_last_name(self, last_name):
+        if last_name and last_name.strip():
+            return name_validator(last_name, "last_name")
+        return last_name
+    
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+    conf_password = serializers.CharField(write_only=True)
+
+    def validate_current_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            return field_error("current_password", "Current password is incorrect.")
+        return value
+
+    def validate(self, attrs):
+        new_password = attrs.get('new_password')
+        conf_password = attrs.get('conf_password')
+
+        password_validator(new_password)
+
+        if new_password != conf_password:
+            return field_error("conf_password", "Confirmation password must be identical.")
+
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.context['request'].user
+        user.set_password(self.validated_data['new_password'])
+        user.save()
+        return user

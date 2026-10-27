@@ -1,7 +1,12 @@
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from .utils import success_response, error_response
-from .serializers import TempUserSerializer, VerifyCodeSerializer, CreateAccountSerializer, LoginSerializer, LogoutSerializer
+from .serializers import (
+    TempUserSerializer, VerifyCodeSerializer,
+    CreateAccountSerializer, LoginSerializer,
+    LogoutSerializer, UserUpdateSettingsSerializer,
+    ChangePasswordSerializer,
+)
 from rest_framework_simplejwt.tokens import RefreshToken
 
 class CreateTempUserAPIView(APIView):
@@ -71,3 +76,21 @@ class LogoutAPIView(APIView):
         serializer = LogoutSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return success_response(message="Logged out successfully", status_code=200)
+
+
+class UpdateSettingsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def patch(self, request):
+        serializer = UserUpdateSettingsSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return success_response(message="Settings updated", data=serializer.data)
+    
+class ChangePasswordAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return success_response(message="Password changed successfully", status_code=200)
