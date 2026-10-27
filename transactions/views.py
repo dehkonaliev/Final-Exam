@@ -29,4 +29,10 @@ def transfertome_api_view(request):
     serializer.save()
     
     return success_response(message="Transfer is successfull", data=serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def transaction_history(request):
+    pass
     

@@ -3,5 +3,5 @@ from .views import ListCreateTransactionAPIView, transfertome_api_view
 
 urlpatterns = [
     path('transaction', ListCreateTransactionAPIView.as_view()),
-    path('tranfer', transfertome_api_view),
+    path('transaction/tome', transfertome_api_view),
 ]

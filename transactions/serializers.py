@@ -10,7 +10,7 @@ from accounting.models import Account
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-        fields = ['id', 'amount', 'transaction_type', 'created_at', 'account']
+        fields = ['id', 'amount', 'created_at', 'transaction_type', 'account']
         read_only_fields = ['id', 'created_at']
         
     def validate(self, attrs):
@@ -45,14 +45,18 @@ class TransactionSerializer(serializers.ModelSerializer):
             return Transaction.objects.create(transaction_type=transaction_type, account=account, amount=amount)
         
     def to_representation(self, instance):
-        balance = instance.account.balance
         representation = super().to_representation(instance)
+        account = instance.account
         if instance.transaction_type:
             representation['transaction_type'] = {
                 "name": instance.transaction_type.name,
                 "type": instance.transaction_type.type         
             }
-            representation['balance'] = balance
+            representation['account'] = {
+                "name": account.account_type.name,
+                "balance": account.balance,
+                "currency": account.currency
+            }
         return representation
             
         
@@ -116,13 +120,15 @@ class TransferToMeSerializer(serializers.ModelSerializer):
             "created_at": transfer_from.created_at,
             "transfer_from": {
                 "id": transfer_from.id,
-                "transaction_type": "Replenish",
-                "account": transfer_from.account.account_type.name
+                "transaction_type": "Transfer to me",
+                "account": transfer_from.account.account_type.name,
+                "balance": transfer_from.account.balance
             },
             "transfer_to": {
                 "id": transfer_to.id,
-                "transaction_type": "Replenish",
-                "account": transfer_from.account.account_type.name
+                "transaction_type": "Transfer from me",
+                "account": transfer_from.account.account_type.name,
+                "balance": transfer_to.account.balance
             }
         }
 
