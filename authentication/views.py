@@ -84,7 +84,7 @@ class UpdateSettingsAPIView(APIView):
         serializer = UserUpdateSettingsSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return success_response(message="Settings updated", data=serializer.data)
+        return success_response(message="Profile updated", data=serializer.data)
     
 class ChangePasswordAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -94,3 +94,4 @@ class ChangePasswordAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return success_response(message="Password changed successfully", status_code=200)
+    
