@@ -5,12 +5,12 @@ from authentication.utils import field_error
     
 
 class AccountSerializer(serializers.ModelSerializer):
-    account_name = serializers.CharField(required=True, write_only=True)
+    account_name = serializers.CharField(required=False, write_only=True)
 
     class Meta:
         model = Account
-        fields = ['id', 'currency', 'account_name']
-        read_only_fields = ['id']
+        fields = ['id', 'currency', 'balance', 'account_name']
+        read_only_fields = ['id', 'balance']
 
     def validate(self, attrs):
         name = attrs.get('account_name')
@@ -18,6 +18,8 @@ class AccountSerializer(serializers.ModelSerializer):
         
         account_obj = AccountBase.objects.filter(name=name).first()
         
+        if not name:
+            return field_error("account_name", "This field is required")
         if account_obj and Account.objects.filter(account_type=account_obj, user=user).exists():
             raise serializers.ValidationError({
                 "account_type": "This account type already exists"
@@ -39,6 +41,14 @@ class AccountSerializer(serializers.ModelSerializer):
             account_type=account_obj, 
             **validated_data
         )
+        
+    def to_representation(self, instance):
+        return {
+            'id': instance.id,
+            'name': instance.account_type.name,
+            'currency': instance.currency,
+            'balance': instance.balance
+        }
         
 class TransactionTypeSerializer(serializers.Serializer):
     transaction_name = serializers.CharField(required=True, write_only=True)

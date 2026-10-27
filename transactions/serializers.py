@@ -16,9 +16,9 @@ def exchange_currency(amount, currency):
     if currency not in Account.CurrencyTypes.values:
         return field_error("currency", "Currency not found")
     if currency != 'UZS':
-        return f"{(amount/Decimal(needed_currencies[currency])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)} {currency}"
+        return (amount/Decimal(needed_currencies[currency])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     else:
-        return f"{amount} UZS"
+        return amount
 
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,7 +67,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             }
             representation['account'] = {
                 "name": account.account_type.name,
-                "balance": exchange_currency(account.balance, account.currency),
+                "changed balance": exchange_currency(instance.changed_balance, account.currency),
                 "currency": account.currency
             }
         return representation
@@ -111,14 +111,14 @@ class TransferToMeSerializer(serializers.ModelSerializer):
             sender_account = Account.objects.select_for_update().get(id=account.id)
             recipient_account = Account.objects.select_for_update().get(id=recipient)
             
-            transfer_to = Transaction.objects.create(amount=amount, account_id=recipient, transaction_type_id=6)
-            transfer_from = Transaction.objects.create(amount=amount, account=account, transaction_type_id=5)
-            
             sender_account.balance = F('balance') - amount
             sender_account.save()
             
             recipient_account.balance = F('balance') + amount
             recipient_account.save()
+            
+            transfer_to = Transaction.objects.create(amount=amount, account_id=recipient, transaction_type_id=6)
+            transfer_from = Transaction.objects.create(amount=amount, account=account, transaction_type_id=5)
         
         return {
             'transfer_to': transfer_to,
@@ -135,14 +135,14 @@ class TransferToMeSerializer(serializers.ModelSerializer):
                 "id": transfer_from.id,
                 "transaction_type": "Transfer to me",
                 "account": transfer_from.account.account_type.name,
-                "balance": exchange_currency(transfer_from.account.balance, transfer_from.account.currency)
+                "balance": exchange_currency(transfer_from.changed_balance, transfer_from.account.currency)
                     
             },
             "transfer_to": {
                 "id": transfer_to.id,
                 "transaction_type": "Transfer from me",
                 "account": transfer_from.account.account_type.name,
-                "balance": exchange_currency(transfer_to.account.balance, transfer_to.account.currency)
+                "balance": exchange_currency(transfer_to.changed_balance, transfer_to.account.currency)
             }
         }
 
