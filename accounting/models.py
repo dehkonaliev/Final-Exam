@@ -17,6 +17,7 @@ class Account(models.Model):
         
     account_type = models.ForeignKey(AccountBase, null=True, blank=True, on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accounts")
+    balance = models.DecimalField(max_digits=30, decimal_places=2, default=0.00)
     currency = models.CharField(max_length=20, choices=CurrencyTypes.choices, default=CurrencyTypes.SUM)
     
     def __str__(self):
