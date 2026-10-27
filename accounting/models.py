@@ -44,9 +44,3 @@ class TransactionTypePrivate(models.Model):
     transaction_type = models.ForeignKey(TransactionTypeBase, on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="transactions")
     
-class Transaction(models.Model):
-    amount = models.DecimalField(decimal_places=2, max_digits=30)
-    transaction_type = models.ForeignKey(TransactionTypeBase, on_delete=models.PROTECT)
-    created_at = models.DateTimeField(auto_now_add=True)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='transactions')
-    

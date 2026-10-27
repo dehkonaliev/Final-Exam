@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import TransactionTypeBase, TransactionTypePrivate, Transaction, AccountBase, Account
+from .models import TransactionTypeBase, TransactionTypePrivate, AccountBase, Account
 from authentication.utils import field_error
 
     
