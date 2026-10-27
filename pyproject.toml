@@ -8,9 +8,11 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "currencyconverter>=0.18.22",
     "djangorestframework>=3.18.3",
     "djangorestframework-simplejwt>=5.5.1",
     "matplotlib>=3.11.2",
+    "requests>=2.34.2",
 ]
 
 [project.scripts]

@@ -1,71 +1,138 @@
-<h1>Kirim chiqim ilovasi</h1>
+# Kirim-Chiqim Ilovasi (Income-Expense Tracker)
 
-# Umumiy loyiha haqida
-    - Loyiha 3 tilda (O'zbek, Ingliz va Rus)
-    - Chiqimlar va kirimlarni hisoblab, qayd etib borish
-    - Django RestFrameworkdan foydalangan holda quriladi
-    - Docker orqali ishga tushirilishi kerak
-    - Default SQLite bazasidan foydalanish kerak
+Django REST Framework asosida qurilgan kirim va chiqimlarni hisobga olish va kuzatib borish tizimi.
 
-# Hisoblar
-    1. Naqd pul, karta (Default mavjud bo'lgan hisoblar)
-    2. Foydalanuvchilar 5 tagacha hisob qo'shishlari mumkin (Masalan: visa, hamkor bank-Humo)
-    3. Eslatmalar (Hisoblardagi mablag' belgilangan miqdordan kamayganida, foydalanuvchilarga bildirishnoma berish)
+## Loyiha haqida
 
-# Kirim turlari
-    1. Oylik, avans, bonus
-    2. Kirim turlari ham 5 tagacha foydalanuvchi tomonidan kiritib qo'yilishi mumkin
+- **Ko'p tillilik**: O'zbek, Ingliz va Rus tillarini qo'llab-quvvatlaydi
+- **Kirim va chiqimlarni hisobga olish**: Barcha kirim va chiqim operatsiyalarini saqlash va kuzatish
+- **Django REST Framework**: RESTful API orqali ishlaydi
+- **JWT autentifikatsiya**: `djangorestframework-simplejwt` yordamida xavfsiz autentifikatsiya
+- **SQLite**: Standart ma'lumotlar bazasi sifatida ishlatiladi
+- **Docker**: Konteyner orqali ishga tushirish imkoniyati
 
-# Chiqim turlari
-    1. Yo'l haqi, Tushlik, Salomatlik uchun
-    2. Bu qism ham foydalanuvchi tomonidan qo'shilishi va o'chirilishi mumkin bo'ladi
-    3. Ko'p ishlatiladigan chiqim turlari, foydalanuvchi yaratilganda uning chiqim turlari jadvaliga avtomatik yozib qo'yiladi
+## Texnologiyalar
 
-# Kirim va Chiqim transaksiyalari
-    1. Chiqimlar va kirimlar ma'lumotlar bazasiga jadval ko'rinishida yozib boriladi
-    2. Chiqimlar:
-        - summa
-        - sana
-        - hisob
-        - chiqim turi
-       
-       Kirimlar:
-        - summa
-        - sana
-        - hisob
-        - kirim turi
-    3. Kirim va chiqimlar bitta modelda yaratiladi
-    4. Kartadagi pulni naqt qilish yoki naqt pulni kartaga o'tkazish biri uchun chiqim va biri uchun kirim sifatida hisoblanadi
+- Python 3.13+
+- Django
+- Django REST Framework
+- djangorestframework-simplejwt
+- matplotlib (hisobotlar va grafiklar uchun)
 
-# Valyuta birligi
-    - Foydalanuvchi o'zi xohlagan valyuta birligini istalgan hisobiga kiritib qo'yishi mumkin.
-    - Transaksiyalar va hisobdagi pullarni ishlatish jarayonini to'g'ri amalga oshirish uchun, Jahon bankidan API olib foydalanailadi.
-    - Bir muammo: Agar foydalanuvchi so'mdagi mablag'larini dollada ko'rishga o'tkazgan bo'lsa, valyutalar kursi o'zgarganda bu mablag'lar boshqacha miqdorda ko'rinadi. 
+## Asosiy funksiyalar
 
-# Hisobotlar
-    - Kirim va chiqim ma'lumotlaridan foydalangan xolda oylik haftalik va kunlik hisobotlar statistika ko'rinishida qaytariladi
+### 1. Hisoblar (Accounts)
+- **Asosiy hisob turlari**: Naqd pul, karta va boshqa standart hisob turlari
+- **Shaxsiy hisoblar**: Har bir foydalanuvchi o'z hisoblarini yaratishi mumkin (maksimal 5 ta)
+- **Valyuta qo'llab-quvvatlash**: USD, SUM, RUBL, EURO kabi valyutalar
+- **Balans hisoblash**: Har bir hisob bo'yicha joriy balansni kuzatish
 
-== Modellar ==
-# Account turlari
-    - name (unique=True)
+### 2. Kirim va Chiqim turlari
+- **Umumiy turlari**: Ma'mur tomonidan belgilangan kirim/chiqim turlari
+- **Shaxsiy turlari**: Foydalanuvchilar o'zlariga kerakli kirim va chiqim turlarini qo'shishlari mumkin (maksimal 5 tagacha)
+- **Avtomatik yaratish**: Yangi foydalanuvchi ro'yxatdan o'tganda, ko'p ishlatiladigan chiqim turlari avtomatik ravishda shaxsiy turlar ro'yxatiga qo'shiladi
+- **Turlar tahlili**: Har bir operatsiya turi `INCOME` yoki `OUTCOME` sifatida tasniflanadi
 
-# Shaxsiy accountlar
-    - account_type (FK)
-    - currency
+### 3. Transaksiyalar
+- **Birlashtirilgan model**: Kirim va chiqim operatsiyalari bitta `Transaction` modeli orqali saqlanadi
+- **To'liq ma'lumot**: Har bir transaksiyada summa, sana, hisob va operatsiya turi saqlanadi
+- **O'tkazmalar**: Kartadan naqdga yoki naqd puldan kartaga o'tkazmalar ham kirim/chiqim sifatida hisobga olinadi
+- **Tarixiy kuzatuv**: Barcha operatsiyalar vaqt bo'yicha saqlanib boriladi
 
-# Operatsiya turlari
-    - name (unique=True)
-    - type (income, expence)
+### 4. Eslatmalar (Notifications)
+- Hisobdagi mablag' belgilangan minimal miqdordan pastga tushganda foydalanuvchiga eslatma beriladi
 
-# Shaxsiy Operatsiya turlari
-    - user (FK)
-    - transaction_type (chiqim turlari, FK)
+### 5. Valyuta kurslari
+- Foydalanuvchilar har bir hisob uchun o'zlariga qulay valyutani tanlashlari mumkin
+- Valyuta kurslarini aniqlash uchun Jahon bankining API'sidan foydalaniladi
+- Turli valyutalarda ko'rsatish imkoniyati mavjud
 
-# Operatsiyalar
-    - amount
-    - transaction_type FK
-    - created_at
-    - account
-    - account (FK, shaxsiy account)
+### 6. Hisobotlar
+- Kunlik, haftalik va oylik hisobotlar
+- Statistik ma'lumotlar ko'rinishida taqdim etiladi
+- Grafiklar va vizualizatsiya (`matplotlib` yordamida)
 
+## Loyiha tuzilishi
 
+```
+Final-Exam/
+├── accounting/      # Hisoblar, operatsiya turlari va asosiy biznes mantiqi
+├── authentication/  # Autentifikatsiya va JWT tokenlar
+├── transactions/    # Transaksiyalar moduli
+├── config/          # Loyiha sozlamalari (settings, urls, wsgi/asgi)
+└── manage.py        # Django boshqaruv skripti
+```
+
+## O'rnatish va ishga tushirish
+
+### Talablar
+- Python 3.13+
+- [uv](https://docs.astral.sh/uv/) (tavsiya etiladi) yoki pip
+
+### Lokal muhitda ishga tushirish
+
+1. **Loyihani klonlash**
+```bash
+git clone <repository-url>
+cd Final-Exam
+```
+
+2. **Virtual muhit yaratish va bog'liqliklarni o'rnatish**
+```bash
+# uv orqali
+uv sync
+
+# yoki pip orqali
+pip install -e .
+```
+
+3. **Ma'lumotlar bazasini migratsiya qilish**
+```bash
+python manage.py migrate
+```
+
+4. **Superuser yaratish (ixtiyoriy)**
+```bash
+python manage.py createsuperuser
+```
+
+5. **Serverni ishga tushirish**
+```bash
+python manage.py runserver
+```
+
+Server `http://127.0.0.1:8000/` manzilida ishga tushadi.
+
+### Docker orqali ishga tushirish
+
+```bash
+docker build -t kirim-chiqim .
+docker run -p 8000:8000 kirim-chiqim
+```
+
+## API Endpoints
+
+Asosiy URL manzillari:
+
+- `/admin/` - Django admin paneli
+- `/api/auth/` - Autentifikatsiya endpointlari
+- `/api/accounting/` - Hisoblar va operatsiya turlari
+- `/api/transactions/` - Transaksiyalar
+
+Batafsil API dokumentatsiyasi uchun admin panel yoki kodni ko'rib chiqishingiz mumkin.
+
+## Ma'lumotlar modeli
+
+### Asosiy modellar
+
+| Model | Tavsif |
+|---|---|
+| `AccountBase` | Umumiy hisob turlari (Naqd, Karta va boshqalar) |
+| `Account` | Foydalanuvchining shaxsiy hisoblari (balans, valyuta bilan) |
+| `TransactionTypeBase` | Umumiy kirim/chiqim turlari |
+| `TransactionTypePrivate` | Foydalanuvchiga tegishli shaxsiy operatsiya turlari |
+| `Transaction` | Barcha kirim va chiqim operatsiyalari |
+
+## Muallif
+
+**Maqsudbek** - dehkanaliev@gmail.com

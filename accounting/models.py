@@ -11,14 +11,14 @@ class AccountBase(models.Model):
 class Account(models.Model):
     class CurrencyTypes(models.TextChoices):
         USD = "USD", 'usd'
-        SUM = "SUM", 'sum'
-        RUBL = "RUBL", 'rubl'
-        EURO = "EURO", 'euro'
+        UZS = "UZS", 'uzs'
+        RUB = "RUB", 'rub'
+        EUR = "EUR", 'eur'
         
     account_type = models.ForeignKey(AccountBase, null=True, blank=True, on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accounts")
     balance = models.DecimalField(max_digits=30, decimal_places=2, default=0.00)
-    currency = models.CharField(max_length=20, choices=CurrencyTypes.choices, default=CurrencyTypes.SUM)
+    currency = models.CharField(max_length=20, choices=CurrencyTypes.choices, default=CurrencyTypes.UZS)
     
     def __str__(self):
         return f"{self.user.username} - {self.account_type}"
@@ -31,7 +31,7 @@ class Account(models.Model):
 class TransactionTypeBase(models.Model):
     class TransactionTypes(models.TextChoices):
         INCOME = "INCOME", 'income'
-        OUTCOME = "OUTCOME", 'outcome'
+        EXPENCE = "EXPENCE", 'expence'
     name = models.CharField(max_length=50)
     type = models.CharField(max_length=20, choices=TransactionTypes.choices)
     

@@ -5,7 +5,20 @@ from accounting.models import TransactionTypeBase
 from django.db import transaction
 from django.db.models import F
 from accounting.models import Account
+import requests
+import json
+from decimal import Decimal, ROUND_HALF_UP
 
+currencies = requests.get('https://cbu.uz/en/arkhiv-kursov-valyut/json/')
+needed_currencies = {x['Ccy']:x['Rate'] for x in currencies.json() if x['Ccy'] in Account.CurrencyTypes.values}
+
+def exchange_currency(amount, currency):
+    if currency not in Account.CurrencyTypes.values:
+        return field_error("currency", "Currency not found")
+    if currency != 'UZS':
+        return f"{(amount/Decimal(needed_currencies[currency])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)} {currency}"
+    else:
+        return f"{amount} UZS"
 
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -54,7 +67,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             }
             representation['account'] = {
                 "name": account.account_type.name,
-                "balance": account.balance,
+                "balance": exchange_currency(account.balance, account.currency),
                 "currency": account.currency
             }
         return representation
@@ -122,13 +135,14 @@ class TransferToMeSerializer(serializers.ModelSerializer):
                 "id": transfer_from.id,
                 "transaction_type": "Transfer to me",
                 "account": transfer_from.account.account_type.name,
-                "balance": transfer_from.account.balance
+                "balance": exchange_currency(transfer_from.account.balance, transfer_from.account.currency)
+                    
             },
             "transfer_to": {
                 "id": transfer_to.id,
                 "transaction_type": "Transfer from me",
                 "account": transfer_from.account.account_type.name,
-                "balance": transfer_to.account.balance
+                "balance": exchange_currency(transfer_to.account.balance, transfer_to.account.currency)
             }
         }
 
