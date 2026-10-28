@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     CreateAccountAPIView, VerifyCodeAPIView, CreateTempUserAPIView, LoginAPIView, LogoutAPIView,
-    ChangePasswordAPIView, UpdateSettingsAPIView
+    ChangePasswordAPIView, ProfileAPIView
 )
 
 urlpatterns = [
@@ -13,6 +13,6 @@ urlpatterns = [
     path('logout', LogoutAPIView.as_view()),
     path('token/refresh', TokenRefreshView.as_view()),
     path('password/change', ChangePasswordAPIView.as_view()),
-    path('profile/update', UpdateSettingsAPIView.as_view()),
+    path('profile', ProfileAPIView.as_view()),
     
 ]

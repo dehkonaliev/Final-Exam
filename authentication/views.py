@@ -4,7 +4,7 @@ from .utils import success_response, error_response
 from .serializers import (
     TempUserSerializer, VerifyCodeSerializer,
     CreateAccountSerializer, LoginSerializer,
-    LogoutSerializer, UserUpdateSettingsSerializer,
+    LogoutSerializer, ProfileSerializer,
     ChangePasswordSerializer,
 )
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -78,10 +78,14 @@ class LogoutAPIView(APIView):
         return success_response(message="Logged out successfully", status_code=200)
 
 
-class UpdateSettingsAPIView(APIView):
+class ProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    def get(self, request):
+        user = request.user
+        return success_response(message="User data", data=ProfileSerializer(user).data)
+    
     def patch(self, request):
-        serializer = UserUpdateSettingsSerializer(request.user, data=request.data, partial=True)
+        serializer = ProfileSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return success_response(message="Profile updated", data=serializer.data)

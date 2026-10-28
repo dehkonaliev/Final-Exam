@@ -142,12 +142,13 @@ class LogoutSerializer(serializers.Serializer):
             return field_error("refresh", "Token is invalid or already blacklisted.")
         return value
     
-class UserUpdateSettingsSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = [
-            'first_name', 'last_name', 'username', 'language'
+            'id', 'first_name', 'last_name', 'username', 'language'
         ]
+        read_only_fields = ['id']
 
     def validate_first_name(self, first_name):
         if first_name and first_name.strip():

@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from datetime import timedelta, datetime
+from .paginations import StandardPagination
 
 
 
@@ -99,10 +100,16 @@ def transaction_history(request):
         except Exception as err:
             return error_response(message=str(err))
     
+    paginator = StandardPagination()
+    
+    page = paginator.paginate_queryset(transactions, request)
+    
+    
+    
     response = {
         "count": transactions.count(),
         "applied_filters":applied_filters,
-        'transactions': TransactionSerializer(transactions, many=True).data
+        'transactions': TransactionSerializer(page, many=True).data
     }
     
     return success_response(message="Transaction history", data=response)

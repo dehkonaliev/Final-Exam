@@ -20,17 +20,28 @@ class AccountCreateListAPIView(APIView):
         accounts = Account.objects.filter(user=request.user)
         
         return success_response(message="Your accounts", data=AccountSerializer(accounts, many=True).data)
+
+class AccountEditDeleteAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def patch(self, request, pk):
+        account = Account.objects.filter(pk=pk, user=request.user).first()
+        if not account:
+            return error_response(message="Account not found", status_code=404)
+        
+        serializer = AccountSerializer(data=request.data, instance=account, context={'user': request.user}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        return success_response(message="Account Updated", data=serializer.data)
     
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def account_delete_api_view(request, pk):
-    account = Account.objects.filter(user=request.user, pk=pk).first()
-    if not account:
-        return error_response(message="Account not found", status_code=404)
-    
-    account.delete()
-    
-    return success_response(message="Account deleted!")
+    def delete(self, request, pk):
+        account = Account.objects.filter(user=request.user, pk=pk).first()
+        if not account:
+            return error_response(message="Account not found", status_code=404)
+        
+        account.delete()
+        
+        return success_response(message="Account deleted!")
 
 class TransactionTypeCreateListAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -45,6 +56,7 @@ class TransactionTypeCreateListAPIView(APIView):
         transaction_types = TransactionTypePrivate.objects.filter(user=request.user)
         
         return success_response(message="Your transaction types", data=TransactionTypeSerializer(transaction_types, many=True).data)
+    
     
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import TransactionTypeBase, TransactionTypePrivate, AccountBase, Account
 from authentication.utils import field_error
+from transactions.serializers import exchange_currency
 
     
 
@@ -18,8 +19,6 @@ class AccountSerializer(serializers.ModelSerializer):
         
         account_obj = AccountBase.objects.filter(name=name).first()
         
-        if not name:
-            return field_error("account_name", "This field is required")
         if account_obj and Account.objects.filter(account_type=account_obj, user=user).exists():
             raise serializers.ValidationError({
                 "account_type": "This account type already exists"
@@ -32,6 +31,8 @@ class AccountSerializer(serializers.ModelSerializer):
         user = self.context.get('user')
         account_obj = validated_data.pop('account_obj')
         name = validated_data.pop('account_name')
+        if not name:
+            return field_error("account_name", "This field is required")
         
         if not account_obj:
             account_obj = AccountBase.objects.create(name=name)
@@ -47,7 +48,7 @@ class AccountSerializer(serializers.ModelSerializer):
             'id': instance.id,
             'name': instance.account_type.name,
             'currency': instance.currency,
-            'balance': instance.balance
+            'balance': exchange_currency(instance.balance, instance.currency)
         }
         
 class TransactionTypeSerializer(serializers.Serializer):
