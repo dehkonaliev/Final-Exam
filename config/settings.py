@@ -46,12 +46,22 @@ INSTALLED_APPS = [
     'authentication',
     'accounting',
     'transactions',
+    'drf_spectacular',
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Mening API'm",
+    "DESCRIPTION": "API hujjatlari",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "REDOC_DIST": "https://cdn.jsdelivr.net/npm/redoc@2.1.5",
 }
 
 MIDDLEWARE = [
