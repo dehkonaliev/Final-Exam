@@ -15,6 +15,7 @@ dependencies = [
     "matplotlib>=3.11.2",
     "requests>=2.34.2",
     "redis",
+    "python-dotenv>=1.2.4",
 ]
 
 [project.scripts]

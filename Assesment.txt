@@ -1,120 +1,202 @@
-﻿LOKAL ASSESSMENT - FINAL EXAM PROJECT
-======================================
+﻿YAKUNIY BAHOLASH - FINAL EXAM PROJECT
+=====================================
+Sana: 2026-10-29
+Baho tarixi: 8.5 -> 8.0 -> 8.3 / 10
+Yakuniy baho: 8.3 / 10
 
-UMUMIY BAHO: 8.5 / 10
+Baholash usuli: kod statik tahlili + `manage.py check` + migratsiya
+tekshiruvi + asosiy oqimlarni test bazasida haqiqiy ishga tushirish.
 
-1. LOYIHA ARXITEKTURASI (9/10)
-   Yaxshi tomonlari:
-   - Toza app bo'linishi: authentication, accounting, transactions - modullar aniq ajratilgan
-   - RESTful API tamoyillari to'g'ri qo'llanilgan
-   - JWT autentifikatsiya to'g'ri integratsiya qilingan
-   - Service layer logikasi serializers va views da mantiqiy ajratilgan
-   - Atomic tranzaksiyalar (django.db.transaction) to'g'ri ishlatilgan
+------------------------------------------------------------
+OXIRGI BAHOLASHDAN KEYINGI O'ZGARISHLAR
+------------------------------------------------------------
++ Email yuborish amalda joriy qilindi: `authentication/email.py`
+  (tasdiqlash kodi + tabrik xati), `templates/code.html`,
+  `templates/greeting.html`, `TEMPLATES["DIRS"]` sozlandi.
++ `.env` qo'llab-quvvatlandi: `python-dotenv`, `load_dotenv()`,
+  `MAILERS` SMTP orqali sozlandi, docker-compose `env_file: .env`.
++ `SECRET_KEY` endi env orqali olinadi.
++ README to'liq qayta yozildi: barcha mavjud funksiyalar, endpointlar,
+  so'rov/javob misollari, `.env`, lokal va Docker yo'riqnomasi.
+- `DEBUG` `.env` da bor, lekin settingsda hali o'qilmaydi (True qat'iy).
+- `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` import vaqtida majburiy
+  (`os.environ[...]`) -> .env bo'lmasa dastur umuman ishga tushmaydi.
 
-   Kamchiliklari:
-   - Ba'zi joylarda biznes mantiq views/serializers da to'planib qolgan
-   - signals.py mavjud emas (avtomatik ishlar uchun)
-   - Permissions sinflari custom qilish imkoni yetarli emas
+------------------------------------------------------------
+1. LOYIHA ARXITEKTURASI (8.5/10)
+   Yaxshi:
+   - authentication / accounting / transactions modullari aniq ajratilgan
+   - RESTful API, JWT, atomic tranzaksiyalar
+   - Redis cache, Docker, email moduli alohida faylda
+   - .env orqali konfiguratsiya boshlangan
 
-2. MODELLAR VA MA'LUMOTLAR BAZASI (9/10)
-   Yaxshi tomonlari:
-   - CustomUser (AbstractUser) to'g'ri ishlatilgan
-   - ForeignKey lar mantiqiy bog'langan
-   - choices va TextChoices to'g'ri ishlatilgan
-   - unique_together cheklovlari mavjud
-   - DecimalField balans va summalar uchun to'g'ri tanlangan
+   Kamchilik:
+   - Cache manzili kodda qat'iy: "redis://redis:6379/1"
+     (config/settings.py:110). Docker tashqarisida Redis topilmaydi va
+     valyuta konvertatsiyasi ishlatiladigan javoblar 500 bo'ladi.
+   - DEBUG / ALLOWED_HOSTS env orqali boshqarilmaydi.
+   - Majburiy env o'zgaruvchilari uchun default/validatsiya yo'q.
+   - Redis ishlamasa fallback yo'q (IGNORE_EXCEPTIONS sozlanmagan).
 
-   Kamchiliklari:
-   - Accounting.TransactionTypePrivate da related_name='transactions' nomi chalkash (Transaction modelga tegishli emas)
-   - Ba'zi fieldlarda null/blank kombinatsiyasi optimallashtirilishi mumkin
-   - Migrationlar toza, lekin tarixiy migratsiyalarda bir nechta oddiy holatlar
+2. MODELLAR VA MA'LUMOTLAR BAZASI (8.5/10)
+   Yaxshi:
+   - CustomUser (AbstractUser), TextChoices, unique_together, DecimalField
+   - Migratsiyalar modelga mos: `makemigrations --check` -> "No changes"
+   - TempUser/MyToken orqali OTP oqimi modellashtirilgan
 
-3. AUTENTIFIKATSIYA VA XAVFSIZLIK (9/10)
-   Yaxshi tomonlari:
-   - Email orqali verifikatsiya (temp user + code) tizimi yaxshi
-   - JWT (simplejwt) bilan blacklist ishlatilgan
-   - Parol validatsiyasi kuchli (katta/kichik harf, raqam, maxsus belgi)
-   - Username validation to'g'ri
-   - Token-based tizim xavfsiz
+   Kamchilik:
+   - Transaction.changed_balance da max_digits/decimal_places yo'q
+     (transactions/models.py:8).
+   - amount uchun musbat qiymat cheklovi yo'q -> manfiy summa bilan
+     balansni teskari tomonga o'zgartirish mumkin.
+   - Transaction.transaction_type blank=True, lekin null=True emas.
+   - TransactionTypePrivate.user related_name="transactions" chalkash.
+   - TempUser.email unique emas (faqat serializer darajasida tekshiriladi).
 
-   Kamchiliklari:
-   - Kod yuborishda email tekshiruvi bor, lekin rate limiting yo'q
-   - Token muddati uzun (access 100 min) - xavfsizlik jihatidan qisqartirish maqsadga muvofiq
-   - DEBUG=True production uchun xavfli
+3. AUTENTIFIKATSIYA VA XAVFSIZLIK (8.5/10)
+   Yaxshi:
+   - Email orqali 6 xonali kod + 15 daqiqa muddat + bir martalik token
+   - Email yuborish endi haqiqiy (SMTP), tabrik xati ham bor
+   - JWT + blacklist, refresh rotation
+   - username/name/password validatorlari kuchli
+   - SECRET_KEY env orqali
 
-4. BIZNES LOGIKASI (9/10)
-   Yaxshi tomonlari:
-   - Tranzaksiya yaratishda balans yangilanishi to'g'ri (F() expressions)
-   - O'tkazmalar (transfer) uchun atomic tranzaksiya ishlatilgan
-   - Balans yetarliligini tekshirish mavjud
-   - Valyuta kurslari (CBU API) integratsiyasi qiziqarli yechim
-   - exchange_currency funksiyasi to'g'ri ishlangan
+   Kamchilik:
+   - Rate limiting / OTP urinishlar limiti yo'q -> 6 xonali kodni
+     brute-force qilish mumkin.
+   - ACCESS_TOKEN_LIFETIME = 100 daqiqa (juda uzun).
+   - DEBUG=True, ALLOWED_HOSTS=[] (production uchun xavfli).
+   - Email yuborish sinxron va try/exceptsiz: SMTP xatosi ro'yxatdan
+     o'tishni 500 bilan yiqitadi (foydalanuvchi yaratilgan bo'lsa ham).
+   - `DEFAULT_FROM_EMAIL` sozlanmagan; `from_email=None` ->
+     webmaster@localhost, Gmail SMTP buni rad etishi mumkin.
+   - Muddati o'tmagan TempUser qayta signup qilinsa kod qayta
+     yuborilmaydi (foydalanuvchi kodni yo'qotsa 15 daqiqa kutadi).
+   - Logout faqat refresh tokenni blacklist qiladi; access token
+     muddati tugagunicha amal qiladi.
 
-   Kamchiliklari:
-   - Tranzaksiya turlari ID 5,6 hardcode qilingan (TransferToMe da) - bu zaif nuqta
-   - CBU API ga so'rov har doim yangi yuborilishi - caching kerak
-   - Tashqi API ishdan chiqqanda xatoliklarni yaxshi boshqarilmagan
+4. BIZNES LOGIKASI (8/10)
+   Yaxshi:
+   - F() expressions, select_for_update, atomic tranzaksiyalar
+   - CBU kurslari Redis'da 1 soat keshlanadi
+   - Valyuta konvertatsiyasi va balans yangilanishi ishlaydi
+
+   Kamchilik (dalillar bilan):
+   - Transfer turlari ID 5 va 6 hardcode (transactions/serializers.py:143-144).
+     Toza migrated bazada bu IDlar yo'q -> transfer COMMITda
+     "IntegrityError: FOREIGN KEY constraint failed" (test bazasida
+     takrorlandi). Hozirgi bazada ham faqat id=1 mavjud.
+   - Har xil valyutali hisoblar o'rtasida transfer 1:1 o'tadi,
+     konvertatsiya qilinmaydi.
+   - INCOME tranzaksiyada changed_balance noto'g'ri: Transaction.save()
+     har doim `balance - amount` qiladi (transactions/models.py:11-14).
+     Tekshiruv: 1000 + 100 -> yangi balans 1100, changed_balance=900.
+   - Balans yetarliligi lockdan tashqarida tekshiriladi; parallel
+     so'rovlarda overdraft (TOCTOU) mumkin.
+   - CBU/Redis xatolari ushlanmaydi -> 500.
 
 5. API DIZAYNI VA SERIALIZERLAR (8.5/10)
-   Yaxshi tomonlari:
-   - Umumiy success_response/error_response funksiyalari
-   - Serializerlarda validatsiya to'g'ri ajratilgan
-   - to_representation da ma'lumotlarni chiroyli formatlash
-   - drf-spectacular bilan Swagger/ReDoc qo'shilgan
+   Yaxshi:
+   - success_response / error_response izchil
+   - Account PATCH/DELETE, to'liq CRUD
+   - History uchun pagination (page_size=50, max=100)
+   - Swagger/ReDoc va OpenAPI sxema
+   - README'da barcha endpointlar va misollar hujjatlashtirilgan
 
-   Kamchiliklari:
-   - Ba'zi serializerlarda validation mantiqi murakkab
-   - Pagination yo'q (transactions list da)
-   - Filtering yaxshi, lekin search/sorting cheklangan
-   - field_error ishlatilishi ba'zan Exception sifatida (serializer da raise) - noaniq
+   Kamchilik:
+   - Pagination faqat history'da; GET /api/transactions/transaction
+     hali ham hammasini qaytaradi.
+   - Throttling umuman sozlanmagan.
+   - Search/sort yo'q; filtering qo'lda.
+   - `transaction-type` ro'yxati TransactionTypePrivate ID qaytaradi,
+     lekin tranzaksiya yaratish TransactionTypeBase ID kutadi
+     (mijoz uchun chalkash).
+   - History'da `account` ID egasi tekshirilmaydi; boshqa userning
+     account_type nomi applied_filters'da ko'rinishi mumkin.
+   - Transfer javobida recipient hisobi nomi uchun sender hisobi
+     ishlatilgan (transactions/serializers.py:167); "to me"/"from me"
+     yorliqlari almashtirilgan.
 
-6. KO'P TILLILIK (TIL) (7/10)
-   Yaxshi tomonlari:
-   - CustomUser da language maydoni qo'shilgan (UZ, EN, RU)
-   - CreateAccount va UpdateSettings da til tanlash imkoniyati
-   - 3 tilda ishlash uchun infratuzilma yaratilgan
-   - USE_I18N=True sozlangan
+6. KO'P TILLILIK (7/10)
+   O'zgarish yo'q:
+   - LocaleMiddleware yo'q, locale/ (.po/.mo) yo'q
+   - gettext_lazy ishlatilmagan, Accept-Language yo'lga qo'yilmagan
+   - Til almashtirish endpointi yo'q; language faqat profilda saqlanadi
+   - USE_I18N=True bor (poydevor tayyor)
 
-   Kamchiliklari:
-   - .po/.mo tarjima fayllari yo'q (locale papkasi mavjud emas)
-   - django.middleware.locale.LocaleMiddleware qo'shilmagan middleware ga
-   - gettext_lazy/_() ishlatilmagan xabarlar (validation xabarlari, response xabarlari)
-   - Til faqat foydalanuvchi profilida saqlanadi, lekin API javoblarida tarjima qilinmaydi
-   - Frontend qaysi tildan so'rayotganini aniqlash mexanizmi (Accept-Language header) to'liq yo'lga qo'yilmagan
-   - Til almashtirish endpointi yo'q
+7. KOD SIFATI VA TOZA KOD (7.5/10)
+   Yaxshi:
+   - Nomlash va importlar odatda tartibli, DRY ga harakat
+   - email.py, paginations.py kichik va tushunarli
+   - README va kod bir-biriga mos (ma'lum cheklovlar ham yozilgan)
 
-7. KOD SIFATI VA TOZA KOD (8/10)
-   Yaxshi tomonlari:
-   - Nomlash odatda to'g'ri
-   - Importlar tartibli
-   - DRY printsipiga harakat qilingan
-   - PEP8 ga yaqin
+   Kamchilik:
+   - `interval_delta` modul importida hisoblanadi
+     (transactions/views.py:37-41) -> uzoq ishlaydigan processda eski
+     vaqt bilan filtrlaydi; naive datetime.now() USE_TZ=True bilan mos emas.
+   - `except:` (bare except) ishlatilgan (transactions/views.py:73).
+   - Ishlatilmayotgan validator (`validate_resume_file_size`) qolgan.
+   - Testlar yo'q: barcha tests.py bo'sh.
+   - `field_error` orqali serializer ichida exception ko'tarish noodatiy.
 
-   Kamchiliklari:
-   - Izohlar kam (lekin so'ralmagan)
-   - Ba'zi o'zgaruvchi nomlari qisqartirilgan
-   - utils.py da field_error raise qiladi - bu biroz noodatiy (odatda serializer validationError qaytaradi)
-   - Kodda takroriy elementlar bor
+8. DOKUMENTATSIYA (9.5/10)
+   Yaxshi:
+   - README to'liq: imkoniyatlar, texnologiyalar, tuzilma, .env,
+     lokal/Docker yo'riqnomasi, barcha endpointlar, so'rov/javob
+     misollari, to'liq curl oqimi, model jadvali, cheklovlar
+   - Swagger/ReDoc havolalari va ishlatish tartibi
+   - Ma'lum cheklovlar ochiq yozilgan (transfer ID, Redis, DEBUG)
 
-8. DOKUMENTATSIYA (9/10)
-   Yaxshi tomonlari:
-   - README.md batafsil va tushunarli (o'zbek tilida)
-   - Swagger/ReDoc qo'shilgan
-   - Loyiha maqsadi, o'rnatish yo'riqnomasi, struktura batafsil
-   - Muallif ma'lumoti
+   Kamchilik:
+   - .env.example fayli yo'q (namuna README ichida).
+   - Production deployment (gunicorn/nginx) bo'limi yo'q.
 
-   Kamchiliklari:
-   - API endpointlar ro'yxati qisqaroq bo'lishi mumkin edi
-   - .env namunasi yo'q
-   - Deployment ko'rsatmalari cheklangan
+------------------------------------------------------------
+TEKSHIRUV NATIJALARI
+------------------------------------------------------------
+OK   : python manage.py check              -> 0 muammo
+OK   : makemigrations --check --dry-run    -> No changes detected
+FAIL : cache.get() lokal muhitda           -> ConnectionError redis:6379
+FAIL : transfer (toza migrated DB)         -> IntegrityError FOREIGN KEY
+FAIL : INCOME changed_balance              -> 900 (kutilgan 1100)
+YO'Q : testlar (0 ta test)
 
 UMUMIY XULOSA:
-Loyiha yaxshi darajada bajarilgan. Asosiy funksionallik to'g'ri ishlaydi. Eng katta kamchilik - ko'p tillilik tizimi yaratilgan bo'lsa-da, to'liq joriy qilinmagan (tarjima fayllari, middleware, gettext ishlatilishi). Shuningdek tashqi API (CBU) ga caching qo'shish va transfer ID larini hardcode qilmaslik tavsiya etiladi.
+Dastur funksional jihatdan yakunlangan: autentifikatsiya (email OTP +
+tabrik xati), JWT, profil, parol, hisoblar CRUD, operatsiya turlari,
+tranzaksiyalar, ichki o'tkazma, filtrlangan tarix, valyuta kurslari,
+hujjatlar va Docker mavjud. README barcha mavjud funksiyalar va ishga
+tushirish yo'riqnomasini to'liq qamrab oladi.
 
-TAKLIFLAR:
-1. LocaleMiddleware qo'shish va locale/ papkasini yaratish
-2. Barcha xabarlarni gettext_lazy bilan o'rab chiqish
-3. CBU kurslarini cache qilish (redis yoki django cache)
-4. Transfer uchun maxsus TransactionType yaratish yoki enum ishlatish
-5. Pagination qo'shish
-6. Rate limiting (drf throttling)
+Shunga qaramay 2 ta bloklovchi nuqta saqlanib qolgan:
+(1) transfer turlari ID 5/6 hardcode -> toza bazada endpoint ishlamaydi;
+(2) Redis manzili faqat Docker uchun -> lokal muhitda konvertatsiya
+talab qiladigan javoblar 500 bo'ladi.
+Shu 2 nuqta va changed_balance xatosi tuzatilsa, baho 9+ ga chiqadi.
+
+------------------------------------------------------------
+TAKLIFLAR (ustuvorlik bo'yicha)
+------------------------------------------------------------
+P0 - bloklovchi:
+1. Transfer turlarini ID emas, nom/enum bo'yicha get_or_create qilish
+   yoki fixture/seed bilan yaratish.
+2. Cache'ni env orqali sozlash; lokal uchun LocMem fallback va
+   IGNORE_EXCEPTIONS=True; CBU/Redis xatolarini ushlash.
+3. changed_balance ni tranzaksiya turiga qarab (+/-) va yangilangan
+   balansdan hisoblash.
+4. amount > 0 validatsiyasi va cross-currency transferda konvertatsiya.
+5. Balans tekshiruvini select_for_update ichida qayta bajarish.
+
+P1 - muhim:
+6. Throttling: anon/user va OTP urinishlariga limit.
+7. Email yuborishni try/except bilan o'rash (yoki async/celery) va
+   DEFAULT_FROM_EMAIL ni sozlash.
+8. Asosiy oqimlar uchun testlar (auth, transaction, transfer, history).
+9. History vaqtini har so'rovda timezone.now() bilan hisoblash.
+10. GET transaction ro'yxatiga ham pagination qo'shish.
+11. DEBUG/ALLOWED_HOSTS ni .env dan o'qish.
+
+P2 - yaxshilash:
+12. LocaleMiddleware + locale/ + gettext_lazy.
+13. .env.example qo'shish; production deployment bo'limi (gunicorn).
+14. transaction-type javobida base ID ni ham qaytarish (mijoz uchun).

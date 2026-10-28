@@ -4,6 +4,7 @@ from .utils import name_validator, username_validator, password_validator, code_
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from django.db.models import F
+from .email import send_welcome_email
 
 
 
@@ -110,6 +111,7 @@ class CreateAccountSerializer(serializers.ModelSerializer):
         validated_data['email'] = token_email
         
         user = CustomUser.objects.create_user(**validated_data)
+        send_welcome_email(token_email, user.first_name)
         return user
 
 

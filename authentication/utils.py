@@ -4,20 +4,7 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from authentication.models import CustomUser
 import re
-
-
-
-
-def validate_cover_image_size(file):
-    max_bytes = 5 * 1024 * 1024
-    if file.size > max_bytes:
-        raise ValidationError("Cover image size must be under 5MB.")
-
-
-def validate_certification_size(file):
-    max_bytes = 10 * 1024 * 1024
-    if file.size > max_bytes:
-        raise ValidationError("Certification file size must be under 10MB.")
+from .email import send_code_email
 
 
 def validate_resume_file_size(file):
@@ -28,7 +15,7 @@ def validate_resume_file_size(file):
     
 def code_generate(user_email):
     code = secrets.randbelow(900000) + 100000
-    # send_verification_code(user_email, code)
+    send_code_email(user_email, code)
     return code
 
 def field_error(field, message):
