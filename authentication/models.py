@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 import secrets
+from django.contrib.auth.models import AbstractUser
 
 
 def default_expiry():
@@ -18,3 +19,10 @@ def generate_token():
 class MyToken(models.Model):
     temp_user = models.ForeignKey(TempUser, on_delete=models.CASCADE, related_name='my_tokens')
     token = models.CharField(max_length=64, default=generate_token)
+    
+class CustomUser(AbstractUser):
+    class Languages(models.TextChoices):
+        UZ = "UZ", 'uz'
+        EN = "EN", 'en'
+        RU = "RU", 'ru'
+    language = models.CharField(max_length=5, choices=Languages.choices, default=Languages.UZ)

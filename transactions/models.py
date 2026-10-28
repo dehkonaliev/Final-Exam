@@ -10,5 +10,5 @@ class Transaction(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.changed_balance:
-            self.changed_balance = self.account.balance
+            self.changed_balance = self.account.balance - self.amount
         return super().save()

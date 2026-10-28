@@ -1,10 +1,9 @@
 from rest_framework import serializers
-from .models import TempUser, MyToken
+from .models import TempUser, MyToken, CustomUser
 from .utils import name_validator, username_validator, password_validator, code_generate, field_error
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from django.db.models import F
-from django.contrib.auth.models import User
 
 
 
@@ -16,7 +15,7 @@ class TempUserSerializer(serializers.ModelSerializer):
         
     def create(self, validated_data):
         email = validated_data['email']
-        if User.objects.filter(email=email).exists():
+        if CustomUser.objects.filter(email=email).exists():
             return field_error("email", "A user with this email already exists")
         temp_user = TempUser.objects.filter(email=email).first()
         if temp_user and temp_user.expiry_time <= timezone.now():
@@ -72,8 +71,8 @@ class CreateAccountSerializer(serializers.ModelSerializer):
     conf_password = serializers.CharField(write_only=True)
     password = serializers.CharField(write_only=True)
     class Meta:
-        model = User
-        fields = ['id', 'token', 'username', 'first_name', 'last_name', 'conf_password', 'password']
+        model = CustomUser
+        fields = ['id', 'token', 'username', 'first_name', 'last_name', 'language', 'conf_password', 'password']
         read_only_fields = ['id']
         
     def validate_token(self, token):
@@ -110,7 +109,7 @@ class CreateAccountSerializer(serializers.ModelSerializer):
         
         validated_data['email'] = token_email
         
-        user = User.objects.create_user(**validated_data)
+        user = CustomUser.objects.create_user(**validated_data)
         return user
 
 
@@ -145,9 +144,9 @@ class LogoutSerializer(serializers.Serializer):
     
 class UserUpdateSettingsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = CustomUser
         fields = [
-            'first_name', 'last_name', 'username'
+            'first_name', 'last_name', 'username', 'language'
         ]
 
     def validate_first_name(self, first_name):

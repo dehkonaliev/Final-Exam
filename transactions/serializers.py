@@ -36,7 +36,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         if not user.accounts.filter(pk=account.id).exists():
             return field_error("account", "Account not found")
         
-        if transaction_type.type == TransactionTypeBase.TransactionTypes.OUTCOME and account.balance < amount:
+        if transaction_type.type == TransactionTypeBase.TransactionTypes.EXPENCE and account.balance < amount:
             return field_error("account", "Insufficient funds")
         
         return attrs
@@ -49,7 +49,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             account_obj = Account.objects.select_for_update().get(id=account.id)
             
-            if transaction_type.type == TransactionTypeBase.TransactionTypes.OUTCOME:
+            if transaction_type.type == TransactionTypeBase.TransactionTypes.EXPENCE:
                 account_obj.balance = F('balance') - amount
             if transaction_type.type == TransactionTypeBase.TransactionTypes.INCOME:
                 account_obj.balance = F('balance') + amount

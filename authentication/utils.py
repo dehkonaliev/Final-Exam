@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 import secrets
 from rest_framework.response import Response
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from authentication.models import CustomUser
 import re
 
 
@@ -75,7 +75,7 @@ def username_validator(username):
         return field_error("username", "Username may only contain letters, numbers, and underscores.")
     if value[0].isdigit():
         return field_error("username", "Username cannot start with a number.")
-    if User.objects.filter(username=value).exists():
+    if CustomUser.objects.filter(username=value).exists():
         return field_error("username", "A user with this username already exists!")
     return value
 
