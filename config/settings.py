@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'accounting',
     'transactions',
     'drf_spectacular',
+    'redis'
 ]
 
 REST_FRAMEWORK = {
@@ -108,6 +109,13 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379/1",
     }
 }
 

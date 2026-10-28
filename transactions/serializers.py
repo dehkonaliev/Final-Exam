@@ -8,11 +8,34 @@ from accounting.models import Account
 import requests
 import json
 from decimal import Decimal, ROUND_HALF_UP
+from django.core.cache import cache
 
-currencies = requests.get('https://cbu.uz/en/arkhiv-kursov-valyut/json/')
-needed_currencies = {x['Ccy']:x['Rate'] for x in currencies.json() if x['Ccy'] in Account.CurrencyTypes.values}
+CURRENCY_CACHE_KEY = "cbu_rates"
+CURRENCY_CACHE_TIMEOUT = 60 * 60
+
+
+def get_needed_currencies():
+    rates = cache.get(CURRENCY_CACHE_KEY)
+    if rates is not None:
+        return rates
+
+    response = requests.get(
+        "https://cbu.uz/en/arkhiv-kursov-valyut/json/",
+        timeout=10,
+    )
+    response.raise_for_status()
+
+    rates = {
+        x["Ccy"]: x["Rate"]
+        for x in response.json()
+        if x["Ccy"] in Account.CurrencyTypes.values
+    }
+
+    cache.set(CURRENCY_CACHE_KEY, rates, CURRENCY_CACHE_TIMEOUT)
+    return rates
 
 def exchange_currency(amount, currency):
+    needed_currencies = get_needed_currencies()
     if currency not in Account.CurrencyTypes.values:
         return field_error("currency", "Currency not found")
     if currency != 'UZS':
