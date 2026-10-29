@@ -10,5 +10,8 @@ class Transaction(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.changed_balance:
-            self.changed_balance = self.account.balance - self.amount
+            if self.transaction_type.type == self.transaction_type.TransactionTypes.INCOME:
+                self.changed_balance = self.account.balance + self.amount
+            elif self.transaction_type.type == self.transaction_type.TransactionTypes.EXPENCE:
+                self.changed_balance = self.account.balance - self.amount
         return super().save()

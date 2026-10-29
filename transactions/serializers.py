@@ -36,6 +36,7 @@ def get_needed_currencies():
 
 def exchange_currency(amount, currency):
     needed_currencies = get_needed_currencies()
+    amount = Decimal(str(amount))
     if currency not in Account.CurrencyTypes.values:
         return field_error("currency", "Currency not found")
     if currency != 'UZS':
@@ -139,9 +140,11 @@ class TransferToMeSerializer(serializers.ModelSerializer):
             
             recipient_account.balance = F('balance') + amount
             recipient_account.save()
+            transfer_to_obj, _ = TransactionTypeBase.objects.get_or_create(name="Transfer to me", type=TransactionTypeBase.TransactionTypes.EXPENCE)
+            transfer_from_obj, _ = TransactionTypeBase.objects.get_or_create(name="Transfer from me", type=TransactionTypeBase.TransactionTypes.INCOME)
             
-            transfer_to = Transaction.objects.create(amount=amount, account_id=recipient, transaction_type_id=6)
-            transfer_from = Transaction.objects.create(amount=amount, account=account, transaction_type_id=5)
+            transfer_to = Transaction.objects.create(amount=amount, account_id=recipient, transaction_type=transfer_to_obj)
+            transfer_from = Transaction.objects.create(amount=amount, account=account, transaction_type=transfer_from_obj)
         
         return {
             'transfer_to': transfer_to,
@@ -157,7 +160,7 @@ class TransferToMeSerializer(serializers.ModelSerializer):
             "transfer_from": {
                 "id": transfer_from.id,
                 "transaction_type": "Transfer to me",
-                "account": transfer_from.account.account_type.name,
+                "account": transfer_to.account.account_type.name,
                 "balance": exchange_currency(transfer_from.changed_balance, transfer_from.account.currency)
                     
             },

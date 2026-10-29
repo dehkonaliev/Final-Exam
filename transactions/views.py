@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from datetime import timedelta, datetime
 from .paginations import StandardPagination
+from django.db.models import Sum
 
 
 
@@ -104,11 +105,14 @@ def transaction_history(request):
     
     page = paginator.paginate_queryset(transactions, request)
     
-    
+    total_expence = transactions.filter(transaction_type__type='EXPENCE').aggregate(Sum('amount'))['amount__sum']   
+    total_income = transactions.filter(transaction_type__type='INCOME').aggregate(Sum('amount'))['amount__sum']    
     
     response = {
         "count": transactions.count(),
         "applied_filters":applied_filters,
+        "total_income": total_income,
+        "total_expence": total_expence,
         'transactions': TransactionSerializer(page, many=True).data
     }
     
